@@ -5,7 +5,13 @@ category: 杂项
 difficulty: medium
 ```
 
-> 它的本质其实是建笛卡尔树
+> 它的本质其实是建笛卡尔树，在笛卡尔树上分治。
+> ::::info[笛卡尔树]
+> 
+> [OI-wiki链接](https://oi-wiki.org/ds/cartesian-tree/)
+> 
+> 笛卡尔树是一种二叉搜索树，每个节点有一个权值，节点权值两两不同，在满足二叉搜索树的条件下还要满足堆的条件，即父节点权值要比子节点小（有时是大）。
+> ::::
 
 传统线性分治一般是将一个区间 $ [l, r] $ 拆分成两个子区间（子问题）$ [l, \text{mid}] $ 和 $ [\text{mid} + 1, r] $ 最后再合并解决，这样可以达到 $ T(n) = T(\frac{n}2) + \mathcal{O}(n) = \mathcal{O}(n \log n) $ 的优秀复杂度。
 
@@ -23,12 +29,12 @@ difficulty: medium
 
 使用ST表或线段树/树状数组可以达到 $ \mathcal{O}(n^2\log n) $ 或 $ \mathcal{O}(n^2) $，也不行。
 
-使用最值分治：
+我们发现，式子里那个 $ \max $ 很不好做，有没有办法可以把它消掉呢？这就请出我们的主角：最值分治。
 
 分治时不再选取第 $ \left\lfloor\frac{l+r}2\right\rfloor $ 个元素切割，而是选取区间最大值切割。
 令区间最大值的下标为 $ \text{mx} $，则将 $ [l, r] $ 切割为 $ [l, \text{mx - 1}] $ 和 $ [\text{mx + 1}, r] $ 两段再分治。
 
-合并时使用可持久化线段树，枚举一边的元素 $ i $，则该元素的贡献是另一边满足 $ a_j \le \frac{a_\text{mx}}{a_i} $ 的 $ j $ 的个数，单次贡献复杂度 $ \mathcal{O}(n \log n) $，
+合并时枚举一边的元素 $ i $，则该元素的贡献是另一边满足 $ a_j \le \frac{a_\text{mx}}{a_i} $ 的 $ j $ 的个数，使用可持久化线段树或二次离线（将贡献离线到最后一起计算），单次贡献复杂度 $ \mathcal{O}(n \log n) $，
 总复杂度**期望**为 $ \mathcal{O}(n \log n) $，合并时记得计算 $ \text{mx} $ 的贡献。
 
 考虑一种极端情况：$ \{a\} $ 为 $ 1,2,3,4,5,6,7,8,9,\cdots,n $，此时我们的做法就被卡到了 $ \mathcal{O}(n^2\log n) $。
@@ -52,7 +58,7 @@ difficulty: medium
 
 ~~写到这我鼠标没电了~~
 
-首先套路地写一个 $ \mathcal{O}(1) $ 查询区间 $ \max $ 和 $ \gcd $ 的ST表，按最大值分治，朴素合并复杂度为 $ \mathcal{O}(n^2) $，不可接受。
+首先套路地写一个 $ \mathcal{O}(1) $ 查询区间 $ \max $ 和 $ \gcd $ 的ST表，按最大值分治消掉 $ \max $，朴素合并复杂度为 $ \mathcal{O}(n^2) $，不可接受。
 
 注意到 $ \gcd $ 有以下性质：
 
@@ -112,6 +118,7 @@ struct psegtree {
     }
     int query(const int l, const int r, const int k) const { return l <= r ? _query(root[r], k, 1, V) - _query(root[l - 1], k, 1, V) : 0; }
 } pst;
+// 二次离线这里换成记录查询
 
 struct SparseTable {
     int f[logN][N];
